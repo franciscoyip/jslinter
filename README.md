@@ -5,5 +5,8 @@
 4. Corresponding pair of bracket will be underlined when the cursor is close to the bracket.
 5. Gutter number for each row.
 
+
 To Run<br />
-gulp serve
+1. Run npm install
+2. Run bower install
+3. Run gulp serve
