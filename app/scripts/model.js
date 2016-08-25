@@ -1,6 +1,8 @@
-var Linter = function(){
+var LinterModel = function(){
     this._pieces = [];
     this._fullstring = null;
+
+    this.stringSetted = new LinterEvent(this);
 
     //Default Settings
     this._defaults = {
@@ -35,7 +37,7 @@ var Linter = function(){
     this.tempbracketAll = null;
 };
 
-Linter.prototype = {
+LinterModel.prototype = {
 
   setFullString: function(string, options){
     this._fullstring = string;
@@ -44,6 +46,8 @@ Linter.prototype = {
       $.extend(this._defaults, options);
     }
     this.processPieces();
+
+    this.stringSetted.notify();
   },
   processPieces: function(){
 
@@ -191,7 +195,7 @@ Linter.prototype = {
 };
 
 //Helper Functions
-Linter.prototype.util = {
+LinterModel.prototype.util = {
   generatePiece: function(str, rownumber){
     return {
       string: str,
