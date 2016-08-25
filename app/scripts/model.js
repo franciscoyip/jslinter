@@ -29,8 +29,6 @@ var LinterModel = function(){
 
     this.punctuation = '.,/#!$%^&*;:=-_`~ ';
 
-
-
     this.bracketsArr = null;
     this.tempcommentNumber = null;
 
@@ -175,9 +173,9 @@ LinterModel.prototype = {
       if(currentPiece.string in this.brackets){
         tmpBracketArr.push(this.brackets[currentPiece.string]);
       }else if(currentPiece.string in this.reverseMap){
-
         if(tmpBracketArr.length === 0 || tmpBracketArr.pop() !== currentPiece.string){
-          this.util.assignError(currentPiece);
+          var errorPiece = (ii-1 > 0 ? this.bracketsArr[ii-1] : currentPiece);
+          this.util.assignError(errorPiece);
           return;
         }
       }
@@ -206,10 +204,3 @@ LinterModel.prototype.util = {
     piece.error = {type: 'bracket'};
   }
 };
-
-/*
-var mylinter = new Linter();
-var str = "// Hello World,\nvar function,\nyes yes yes,";
-mylinter.setFullString(str);
-console.log( mylinter.getPieces() );
-*/
