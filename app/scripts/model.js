@@ -57,10 +57,33 @@ LinterModel.prototype = {
     //Reset some variables
     this.bracketsArr = [];
 
-    this.tempbracketAll = [];
-
     //Go over each characters
     //TODO: Refractor later, not efficient
+    this.tempbracketAll = [];
+    if(this._defaults.caretPos){
+      var caretpos = this._defaults.caretPos;
+      var flagged = false;
+
+      Array.from(this._fullstring).forEach(function(char, index){
+         if(char in this.brackets || char in this.reverseMap){
+            var findMatch = false;
+            if(!flagged){
+              if(index === caretpos){
+                findMatch = true;
+                flagged = true;
+              }else if(caretpos === index + 1){
+                findMatch = true;
+                flagged = true;
+              }
+            }
+            this.tempbracketAll.push({
+              char: char,
+              index: index,
+              findMatch: findMatch
+            });
+         }
+      }.bind(this));
+    }
 
     this._pieces = this._fullstring.split('\n').map(function(row, index){
         var rowresult = [];
@@ -107,6 +130,8 @@ LinterModel.prototype = {
     //Check balance brackets
     this.checkBracket();
 
+    //Check for matched bracket
+    this.matchBracket(this.bracketsArr);
   },
   getPieces: function(){
     return this._pieces;
@@ -133,34 +158,39 @@ LinterModel.prototype = {
     var str = piece.string;
     if(!str){return;}
     if(str in this.brackets || str in this.reverseMap){
+      piece.type = 'bracket';
       this.bracketsArr.push(piece);
     }
   },
   matchBracket: function(bracketsArr){
     //Find the flagged bracket
     var findmatch = null;
+    var matched = null;
     var findMatchIndex = null;
-    findmatch = bracketsArr.find(function(pieceObj, index){
+    var _self = this;
+    findmatch = this.tempbracketAll.find(function(pieceObj, index){
         if(pieceObj.findMatch){findMatchIndex = index;}
         return pieceObj.findMatch;
     });
+    findmatch = findMatchIndex ? bracketsArr[findMatchIndex] : null;
     //determine the search direction
-    var matched = null;
 
-    if(findmatch.string in this.brackets){
-      //search forward
-      matched = bracketsArr.slice(findMatchIndex).find(function(piece){
-        return piece.string === this.brackets[findmatch.string];
-      });
-    }else{
-      //search backward
-      matched = bracketsArr.slice(0, findMatchIndex).reverse().find(function(piece){
-        return piece.string === this.reverseMap[findmatch.string];
-      });
-    }
-    if(matched){
-      matched.matched = true;
-      findmatch.matched = true;
+    if(findmatch){
+      if(findmatch.string in this.brackets){
+        //search forward
+        matched = bracketsArr.slice(findMatchIndex).find(function(piece){
+          return piece.string === _self.brackets[findmatch.string];
+        });
+      }else{
+        //search backward
+        matched = bracketsArr.slice(0, findMatchIndex).reverse().find(function(piece){
+          return piece.string === _self.reverseMap[findmatch.string];
+        });
+      }
+      if(matched){
+        matched.matched = true;
+        findmatch.matched = true;
+      }
     }
   },
   checkBracket: function(){

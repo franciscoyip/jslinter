@@ -69,12 +69,13 @@ body {
 }
 
 /* App Style */
+
 .textarea-panel{
   .textarea-panel{
     overflow: hidden;
     position: relative;
     height: 0;
-    
+
   }
   textarea{
     resize: none;
@@ -110,6 +111,10 @@ body {
     //some color coding for keywords and comment
     .js-keyword{
       color: #708;
+    }
+    .js-matched{
+      text-decoration: underline;
+      color: #3c763d;
     }
   }
 }

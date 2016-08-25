@@ -75,6 +75,10 @@ LinterView.prototype = {
         case 'comment':
           $el.addClass('js-comment');
           break;
+        case 'bracket':
+          $el.addClass('js-bracket');
+          if(pieceObj.matched){$el.addClass('js-matched')}
+          break;
         default:
           break;
       }
