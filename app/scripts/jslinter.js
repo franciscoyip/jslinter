@@ -17,8 +17,8 @@ JSLinterUI.prototype = {
 
     },
     bindEvents: function(){
-      this.$textarea.bind('input propertychange', function(e){
-        this.linter.setPieces(this.$textarea.val());
+      this.$textarea.bind('input propertychange, keyup', function(e){
+        this.linter.setFullString(this.$textarea.val(), {caretPos: this.$textarea.prop('selectionStart')});
         this.renderCodearea();
         this.renderWhiteboard();
       }.bind(this));

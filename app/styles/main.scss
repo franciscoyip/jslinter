@@ -70,10 +70,15 @@ body {
 
 /* App Style */
 .textarea-panel{
-
+  .textarea-panel{
+    overflow: hidden;
+    position: relative;
+    height: 0;
+    
+  }
   textarea{
     resize: none;
-    min-height: 200px;
+    //min-height: 200px;
   }
 }
 
