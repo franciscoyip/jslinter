@@ -49,7 +49,7 @@ LinterModel.prototype = {
   },
   processPieces: function(){
 
-    //to call help use this.util;
+    //to call helper use this.util;
 
     //Assign this to _self for the correct context binding
     var _self = this;
@@ -85,6 +85,7 @@ LinterModel.prototype = {
       }.bind(this));
     }
 
+    //TODO: Ugly loop need to Refractor
     this._pieces = this._fullstring.split('\n').map(function(row, index){
         var rowresult = [];
         var tempstr = null;
