@@ -27,7 +27,7 @@ var LinterModel = function(){
       ')':'('
     };
 
-    this.punctuation = '.,/#!$%^&*;:=-_`~ ';
+    this.punctuation = '.,/#!$%^&*;:=-_`~ \n';
 
     this.bracketsArr = null;
     this.tempcommentNumber = null;
@@ -56,77 +56,44 @@ LinterModel.prototype = {
     var rownumber = 1;
     //Reset some variables
     this.bracketsArr = [];
+    this._pieces = [];
 
     //Go over each characters
-    //TODO: Refractor later, not efficient
+    //TODO: Refractor for more functions and improvement
     this.tempbracketAll = [];
-    if(this._defaults.caretPos){
-      var caretpos = this._defaults.caretPos;
-      var flagged = false;
+    var turnOnBrMatch = false;
+    var tempstr = null;
 
-      Array.from(this._fullstring).forEach(function(char, index){
-         if(char in this.brackets || char in this.reverseMap){
-            var findMatch = false;
-            if(!flagged){
-              if(index === caretpos){
-                findMatch = true;
-                flagged = true;
-              }else if(caretpos === index + 1){
-                findMatch = true;
-                flagged = true;
-              }
-            }
-            this.tempbracketAll.push({
-              char: char,
-              index: index,
-              findMatch: findMatch
-            });
-         }
-      }.bind(this));
-    }
+    Array.from(this._fullstring).forEach(function(char, index){
 
-    //TODO: Ugly loop need to Refractor
-    this._pieces = this._fullstring.split('\n').map(function(row, index){
-        var rowresult = [];
-        var tempstr = null;
-
-        if(!row){
-          //Empty row
-          rowresult.push(this.util.generatePiece('&nbsp;', rownumber));
-          rownumber++;
-        }
-
-        //Process Each splitted row
-        Array.from(row).forEach(function(char, index){
-          if (this.isSpecial(char)) {
-            if(tempstr !== null){
-              rowresult.push(this.assignPieceType( this.util.generatePiece(tempstr, rownumber) ));
-              tempstr = '';
-            }
-
-            var charObj = this.util.generatePiece(char, rownumber);
-            this.storeBracket(charObj);
-            rowresult.push(charObj);
-
-          } else {
-            tempstr = (tempstr !== null) ? tempstr + char : char;
+        var charPiece = this.checkGenerateSpecial(char, index, rownumber, turnOnBrMatch);
+        if(charPiece){
+          //if current char is special char
+          if(tempstr !== null){
+            this._pieces.push(this.generatePiece(tempstr, rownumber));
+            tempstr = '';
           }
+          turnOnBrMatch = charPiece.findMatch ? true : false;
+          if(charPiece.findMatch){
+            console.log('Need to find match');
+          }
+          this._pieces.push(charPiece);
 
-          //Last character
-          if (index === row.length - 1) {
-            if(tempstr){
-              rowresult.push(this.assignPieceType( this.util.generatePiece(tempstr, rownumber) ));
-              tempstr = '';
-            }
+          if(charPiece.isNewLine()){
             rownumber++;
           }
+        }else{
+          tempstr = (tempstr !== null) ? tempstr + char : char;
+        }
 
-        }.bind(_self));
+        //Last character
+        if (index === this._fullstring.length - 1) {
+          if(tempstr){
+            this._pieces.push(this.generatePiece(tempstr, rownumber));
+          }
+        }
 
-        return rowresult;
-    }.bind(_self)).reduce(function(a, b){
-      return a.concat(b);
-    },[]);
+    }.bind(_self));
 
     //Check balance brackets
     this.checkBracket();
@@ -142,26 +109,30 @@ LinterModel.prototype = {
       return piece.error !== undefined;
     });
   },
-  assignPieceType: function(piece){
-    //TODO check for comment
+  checkGenerateBracket:function(char, index, rownum, turnOnBrMatch){
+    //Check and Generate Bracket piece
+    if(!char){return false;}
+    if(char in this.brackets || char in this.reverseMap){
+      var caretpos = this._defaults.caretPos;
+      var piece = this.generatePiece(char, rownum);
 
-    //default type to text
-    piece.type = 'text';
-
-    //Check for keyword
-    if(this.isKeyword(piece.string)){
-      piece.type='keyword';
-      return piece;
-    }
-    return piece;
-  },
-  storeBracket: function(piece){
-    var str = piece.string;
-    if(!str){return;}
-    if(str in this.brackets || str in this.reverseMap){
+      piece.index = index;
       piece.type = 'bracket';
       this.bracketsArr.push(piece);
+
+      if(!turnOnBrMatch){
+        var findMatch = false;
+        if(index === caretpos){
+          findMatch = true;
+        }else if(caretpos === index + 1){
+          findMatch = true;
+        }
+        piece.findMatch = findMatch;
+      }
+      this.tempbracketAll.push(piece);
+      return piece;
     }
+    return false;
   },
   matchBracket: function(bracketsArr){
     //Find the flagged bracket
@@ -215,22 +186,34 @@ LinterModel.prototype = {
       this.util.assignError(currentPiece);
     }
   },
-  isSpecial: function(char){
-    return (char in this.brackets || char in this.reverseMap || this.punctuation.indexOf(char) !== -1);
+  checkGenerateSpecial: function(char, index, rownumber, turnOnBrMatch){
+    var charPiece = this.checkGenerateBracket(char, index, rownumber, turnOnBrMatch);
+    if(charPiece){return charPiece;}
+    if(this.punctuation.indexOf(char) !== -1){
+      return this.generatePiece(char, rownumber);
+    }
+    return false;
+  },
+  generatePiece: function(str, rownumber){
+    var type = this.isKeyword(str) ? 'keyword' : 'text';
+    var piece = {string: str, rownum: rownumber, type: type};
+    $.extend(piece, PieceModel);
+    return piece;
   },
   isKeyword: function(piece){
     return (this.keywords.indexOf(piece) !== -1);
   },
 };
 
+//PieceModel for decoration extend
+var PieceModel = {
+  isNewLine: function(){
+    return this.string === '\n';
+  }
+};
+
 //Helper Functions
 LinterModel.prototype.util = {
-  generatePiece: function(str, rownumber){
-    return {
-      string: str,
-      rownum: rownumber
-    };
-  },
   assignError: function(piece){
     piece.error = {type: 'bracket'};
   }
