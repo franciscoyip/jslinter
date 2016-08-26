@@ -43,24 +43,10 @@ LinterView.prototype = {
 
     var currentRow = null;
 
-    //helper function TODO Move out function scope later
-    function genrow(){
-      var $rowdiv = $('<div>').addClass('coderow');
-      var $rowgutter = $('<div>').addClass('linenumber');
-      var $rowpre = $('<pre>');
-      $rowdiv.append($rowgutter).append($rowpre);
-      return {
-        $div: $rowdiv,
-        $gutter: $rowgutter,
-        $pre: $rowpre,
-        rownum: null
-      };
-    }
-
-    pieces.forEach(function(pieceObj){
+    pieces.forEach(function(pieceObj, index){
 
       if(!currentRow || currentRow.rownum !== pieceObj.rownum){
-          currentRow = genrow();
+          currentRow = this.util.generateRow();
           currentRow.$gutter.html(pieceObj.rownum);
           currentRow.rownum = pieceObj.rownum;
           this._elements.$codearea.append(currentRow.$div);
@@ -84,6 +70,7 @@ LinterView.prototype = {
       }
       $el.html(pieceObj.string);
       currentRow.$pre.append($el);
+
     }.bind(this));
 
   },
@@ -95,5 +82,19 @@ LinterView.prototype = {
       div.html("Unmatch '" + pieceObj.string + "' at line "+pieceObj.rownum);
       this._elements.$whiteboard.append(div);
     }.bind(this));
+  },
+  util:{
+    generateRow: function(){
+      var $rowdiv = $('<div>').addClass('coderow');
+      var $rowgutter = $('<div>').addClass('linenumber');
+      var $rowpre = $('<pre>');
+      $rowdiv.append($rowgutter).append($rowpre);
+      return {
+        $div: $rowdiv,
+        $gutter: $rowgutter,
+        $pre: $rowpre,
+        rownum: null
+      };
+    }
   }
 };

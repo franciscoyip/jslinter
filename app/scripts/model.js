@@ -91,6 +91,9 @@ LinterModel.prototype = {
           if(tempstr){
             this._pieces.push(this.generatePiece(tempstr, rownumber));
           }
+          if(charPiece && charPiece.isNewLine()){
+            this._pieces.push(this.generatePiece('&nbsp;', rownumber));
+          }
         }
 
     }.bind(_self));
